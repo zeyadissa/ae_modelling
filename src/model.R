@@ -5,7 +5,7 @@ source('src/data.R')
 #formula for ae
 ae_formula <- brms::bf(
   # mu (mean) part
-  type_1_breaches ~ occupied_ratio + covid_flag + (1|org_code),
+  all_breaches ~ occupied_ratio + covid_flag + (1|org_code),
   # phi (precision) part
   phi ~  covid_flag + (1|org_code) ,
   # alpha (zero-inflation) part
@@ -46,7 +46,7 @@ ae_model <- brms::brm(
   #only handle 4 threads max? 4 chains x 1 threads is enough. someone buy me
   #a better computer and I can do this more effectively
   threads = brms::threading(1),
-  file = "ae_model_v5"
+  file = "test/ae_model_v5"
 )
 
 # Model outputs : zoib -----
