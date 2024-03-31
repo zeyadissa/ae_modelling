@@ -29,7 +29,14 @@ The findings are stark in that they reveal three particular trends:
 2. The impact of changing occupied-bed ratios has changed substantially since COVID-19, with freeing up beds associated with nearly 2-3x less breaches than pre-2019/20
 3. The impact of opening beds is is insignificant at very low levels <60% occupancy, but grows exponentially, reaching a nadir at 100%
 
+Estimates of the average proportion of breaches for each occupied ratio by period (Pre, post, and during COVID) can be calculated for the mean trust.
+
+![Alt Text](https://github.com/zeyadissa/ae_modelling/blob/main/res/estimates.png)
+
+This is furthered by the analysis of marginal effects, which reveals an increasing trend with wider dispersion across higher occupancy rates.
+
+![Alt Text](https://github.com/zeyadissa/ae_modelling/blob/main/res/marginal_effects.png)
+
 ## Limitations & Further Research
 
-
-
+Though the findings are significant, they are nevertheless limited. Due to the lack of site-specific information, particularly in relation to staffing, and the usage of public data, this analysis makes some leaps of logic. Further research can be targetted towards building a capacity approach using an active production function: by identifying the proportion of patients likely to need admittance from patient-record level data, modelling that across time, and identifying both the time taken to admit someone and the external limitations arising due to high bed occupancy.
