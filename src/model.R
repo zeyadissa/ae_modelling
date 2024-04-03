@@ -5,7 +5,7 @@ source('src/data.R')
 #formula for ae
 ae_formula <- brms::bf(
   # mu (mean) part
-  all_breaches ~ occupied_ratio + covid_flag + (1|org_code),
+  all_breaches_ratio ~ occupied_ratio + covid_flag + (1|org_code),
   # phi (precision) part
   phi ~  covid_flag + (1|org_code) ,
   # alpha (zero-inflation) part
@@ -35,10 +35,10 @@ ae_model <- brms::brm(
   prior = priors,
   #q: is this depth enough? should i increase? no warning about convergence
   #so am sort of happy so far
-  control = list(adapt_delta = 0.97,
+  control = list(adapt_delta = 0.99,
                  max_treedepth = 12),
   chains = 4, 
-  iter = 2000, 
+  iter = 4000, 
   warmup = 1000,
   cores = 4, 
   seed = 1926, 
@@ -46,21 +46,18 @@ ae_model <- brms::brm(
   #only handle 4 threads max? 4 chains x 1 threads is enough. someone buy me
   #a better computer and I can do this more effectively
   threads = brms::threading(1),
-  file = "test/ae_model_v5"
+  file = "test/ae_model_v7"
 )
 
 # Model outputs : zoib -----
 
 #get average slopes through vars;
 #how does this work exactly?
-ae_beta_1 <- marginaleffects::avg_comparisons(ae_model,
-                                         variables = 'occupied_ratio',
-                                         by = 'covid_flag')
-
 ame_zi_0 <- marginaleffects::predictions(ae_model, 
                                          newdata = marginaleffects::datagrid(
                                            covid_flag = unique,
                                            occupied_ratio = seq(0, 100, by = 1)))
+
 
 ame_zi_1 <- ame_zi_0 %>% 
   marginaleffects::posterior_draws() %>%
@@ -70,9 +67,20 @@ ame_zi_1 <- ame_zi_0 %>%
     TRUE ~ '1. Pre-Covid'
   ))
 
-#average predictions
-ame_zi_2 <- marginaleffects::avg_predictions(ae_model, 
-                                             variables = 'occupied_ratio')
+ame_zi_a0 <- marginaleffects::predictions(ae_model, 
+                                         newdata = marginaleffects::datagrid(
+                                           org_code = unique,
+                                           covid_flag = 'pre_covid',
+                                           occupied_ratio = seq(50, 100, by = 1)))
+
+
+ame_zi_a1 <- ame_zi_a0 %>% 
+  marginaleffects::posterior_draws() %>%
+  mutate(covid_flag = case_when(
+    covid_flag == 'covid' ~ '2. Covid',
+    covid_flag == 'post_covid' ~ '3. Post-Covid',
+    TRUE ~ '1. Pre-Covid'
+  ))
 
 #model
 ame_beta_bayes_1 <- ae_model %>% 
@@ -99,14 +107,9 @@ comparative_model <- marginaleffects::comparisons(model = ae_model,
                                occupied_ratio = c(70:100)),
                              comparison = 'difference')
 
-#evidence of change in slope: important?
-marginaleffects::plot_slopes(model = ae_model,
-                             variable='occupied_ratio',
-                             by='covid_flag')
-
 # Model outputs: fraclogit -----
 
-ae_model_frac <- glm(all_breaches ~ 
+ae_model_frac <- glm(all_breaches_ratio ~ 
                        occupied_ratio + 
                        covid_flag + 
                        (1|org_code), 

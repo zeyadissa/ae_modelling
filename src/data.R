@@ -25,20 +25,37 @@ FINAL_data <- FINAL_ae_data %>%
                   as.integer(time_since_covid) %in% c(0,1) ~ 'covid',
                   as.integer(time_since_covid) < 0 ~ 'pre_covid',
                   as.integer(time_since_covid) > 1 ~ 'post_covid'),
+                time_flag = dplyr::case_when(
+                  year(quarter_date) <= 2015 ~ 'Pre-2016',
+                  year(quarter_date) >= 2021 ~ 'Post-Covid',
+                  TRUE ~ 'Other'),
                 type_1_breaches = remergency_breaches_type_1/remergency_type_1,
                 type_2_breaches = remergency_breaches_type_2/remergency_type_2,
                 type_3_breaches = remergency_breaches_type_3/remergency_type_3,
-                all_breaches = (remergency_breaches_type_1+remergency_breaches_type_2+remergency_breaches_type_3)/(remergency_type_3+remergency_type_2+remergency_type_1),
+                all_breaches = (remergency_breaches_type_1+remergency_breaches_type_2+remergency_breaches_type_3),
+                all_attendances = (remergency_type_3+remergency_type_2+remergency_type_1),
+                all_breaches_ratio = (remergency_breaches_type_1+remergency_breaches_type_2+remergency_breaches_type_3)/(remergency_type_3+remergency_type_2+remergency_type_1),
                 type_1_admit_ratio = remergency_admissions_type_1/remergency_type_1,
                 #note, multiply by 100 to enable easier interpretation. this is so confusing!!!
                 occupied_ratio = 100*(occupied_general_acute_beds/general_acute_beds))
 
 FINAL_regression_data <- FINAL_data %>%
-  select(quarter_date,covid_flag,org_code,all_breaches,remergency_type_1,occupied_ratio) %>%
+  select(quarter_date,time_flag,covid_flag,org_code,all_breaches_ratio,remergency_type_1,occupied_ratio) %>%
   #remove nas: should i constrain this dataset more?
   tidyr::drop_na() %>%
   #remove small superflous places (1k seems a good limit?)
-  dplyr::filter(remergency_type_1 >= 1000 & all_breaches < 0.5)
+  dplyr::filter(remergency_type_1 >= 1000 & all_breaches_ratio < 0.5)
+
+FINAL_reference_data <- FINAL_data %>%
+  select(quarter_date,covid_flag,org_code,occupied_general_acute_beds,all_breaches,all_attendances,general_acute_beds) %>%
+  #remove nas: should i constrain this dataset more?
+  tidyr::drop_na() %>%
+  dplyr::group_by(quarter_date,org_code,covid_flag) %>%
+  dplyr::summarise(
+    occupied_ratio = 100*sum(occupied_general_acute_beds,na.rm=T)/sum(general_acute_beds,na.rm=T),
+    breach_ratio = sum(all_breaches,na.rm=T)/sum(all_attendances,na.rm=T),
+    all_attendances = sum(all_attendances,na.rm=T)) %>%
+  tidyr::drop_na()
 
 EDA_1 <- FINAL_data %>%
   dplyr::mutate(occupied_ratio = as.integer(occupied_ratio)) %>%
