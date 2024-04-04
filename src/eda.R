@@ -2,14 +2,19 @@ source('src/model.R')
 
 # EDA ------
 
-ggplot2::ggplot(ame_zi_1,ggplot2::aes(x = occupied_ratio, y = draw, color = covid_flag, fill = covid_flag)) +
+PLOT_predictions <- 
+  ggplot2::ggplot(ame_zi_1 %>%
+                  filter(time_flag != 'Covid') %>%
+                  mutate(time_flag = fct_relevel(time_flag, 
+                                            "Pre-2013", "2013 to 2016", "2016 to 2019", 'Post-Covid')),
+                ggplot2::aes(x = occupied_ratio, y = draw, color = time_flag, fill = time_flag)) +
   ggdist::stat_lineribbon(ggplot2::aes(fill_ramp = ggplot2::after_stat(level))) +
   ggplot2::scale_y_continuous(labels = scales::label_percent()) +
   ggplot2::scale_fill_viridis_d(option = "plasma", end = 0.8) +
   ggplot2::scale_color_viridis_d(option = "plasma", end = 0.8) +
   ggdist::scale_fill_ramp_discrete(range = c(0.2, 0.7)) +
   ggplot2::geom_hline(yintercept=0.05,linetype=2,col='black')+
-  ggplot2::facet_wrap(ggplot2::vars(covid_flag), ncol = 3) +
+  ggplot2::facet_wrap(ggplot2::vars(time_flag), ncol = 4) +
   ggplot2::labs(x = "A&G Occupied beds ratio",
                 y = "Predicted proportion of type 1 AE breaches",
                 fill = "Covid Flag", color = "Covid Flag",

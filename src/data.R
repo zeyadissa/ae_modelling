@@ -22,13 +22,15 @@ FINAL_data <- FINAL_ae_data %>%
   #create variables, covid_flag, time since covid, breaches, admit ratio and occupied
   dplyr::mutate(time_since_covid = quarter_date - zoo::as.yearqtr(lubridate::make_date(year=2020,month=3,day=1)),
                 covid_flag = dplyr::case_when(
-                  as.integer(time_since_covid) %in% c(0,1) ~ 'covid',
-                  as.integer(time_since_covid) < 0 ~ 'pre_covid',
-                  as.integer(time_since_covid) > 1 ~ 'post_covid'),
+                  as.integer(time_since_covid) %in% c(0,1) ~ '2. Covid',
+                  as.integer(time_since_covid) < 0 ~ '1. Pre-Covid',
+                  as.integer(time_since_covid) > 1 ~ '3. Post-Covid'),
                 time_flag = dplyr::case_when(
-                  year(quarter_date) <= 2015 ~ 'Pre-2016',
-                  year(quarter_date) >= 2021 ~ 'Post-Covid',
-                  TRUE ~ 'Other'),
+                  year(quarter_date) <= 2013 ~ 'Pre-2013',
+                  year(quarter_date) > 2013 & year(quarter_date) <= 2016 ~ '2013 to 2016',
+                  year(quarter_date) > 2016 & year(quarter_date) <= 2019 ~ '2016 to 2019',
+                  year(quarter_date) > 2020 & year(quarter_date) <= 2021 ~ 'Covid',
+                  TRUE ~ 'Post-Covid'),
                 type_1_breaches = remergency_breaches_type_1/remergency_type_1,
                 type_2_breaches = remergency_breaches_type_2/remergency_type_2,
                 type_3_breaches = remergency_breaches_type_3/remergency_type_3,
@@ -72,3 +74,4 @@ EDA_2 <- FINAL_data %>%
   dplyr:: mutate(ratio_breach = (breaches/attendances)*100,
          ratio_occupied = ((occupied/beds))*100,
          distance_target = 5 - ratio_breach)
+

@@ -5,9 +5,9 @@ source('src/data.R')
 #formula for ae
 ae_formula <- brms::bf(
   # mu (mean) part
-  all_breaches_ratio ~ occupied_ratio + covid_flag + (1|org_code),
+  all_breaches_ratio ~ occupied_ratio + time_flag + (1|org_code),
   # phi (precision) part
-  phi ~  covid_flag + (1|org_code) ,
+  phi ~  time_flag + (1|org_code) ,
   # alpha (zero-inflation) part
   zoi ~ occupied_ratio,
   coi ~ occupied_ratio
@@ -46,7 +46,7 @@ ae_model <- brms::brm(
   #only handle 4 threads max? 4 chains x 1 threads is enough. someone buy me
   #a better computer and I can do this more effectively
   threads = brms::threading(1),
-  file = "test/ae_model_v7"
+  file = "test/ae_model_v9"
 )
 
 # Model outputs : zoib -----
@@ -55,32 +55,22 @@ ae_model <- brms::brm(
 #how does this work exactly?
 ame_zi_0 <- marginaleffects::predictions(ae_model, 
                                          newdata = marginaleffects::datagrid(
-                                           covid_flag = unique,
+                                           time_flag = unique,
                                            occupied_ratio = seq(0, 100, by = 1)))
 
 
 ame_zi_1 <- ame_zi_0 %>% 
-  marginaleffects::posterior_draws() %>%
-  mutate(covid_flag = case_when(
-    covid_flag == 'covid' ~ '2. Covid',
-    covid_flag == 'post_covid' ~ '3. Post-Covid',
-    TRUE ~ '1. Pre-Covid'
-  ))
+  marginaleffects::posterior_draws() 
 
 ame_zi_a0 <- marginaleffects::predictions(ae_model, 
                                          newdata = marginaleffects::datagrid(
                                            org_code = unique,
-                                           covid_flag = 'pre_covid',
+                                           covid_flag = '1. Pre-Covid',
                                            occupied_ratio = seq(50, 100, by = 1)))
 
 
 ame_zi_a1 <- ame_zi_a0 %>% 
-  marginaleffects::posterior_draws() %>%
-  mutate(covid_flag = case_when(
-    covid_flag == 'covid' ~ '2. Covid',
-    covid_flag == 'post_covid' ~ '3. Post-Covid',
-    TRUE ~ '1. Pre-Covid'
-  ))
+  marginaleffects::posterior_draws()
 
 #model
 ame_beta_bayes_1 <- ae_model %>% 
