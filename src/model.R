@@ -65,53 +65,9 @@ ame_zi_1 <- ame_zi_0 %>%
 ame_zi_a0 <- marginaleffects::predictions(ae_model, 
                                          newdata = marginaleffects::datagrid(
                                            org_code = unique,
-                                           covid_flag = '1. Pre-Covid',
+                                           covid_flag = 'Pre-2013',
                                            occupied_ratio = seq(50, 100, by = 1)))
 
 
 ame_zi_a1 <- ame_zi_a0 %>% 
   marginaleffects::posterior_draws()
-
-#model
-ame_beta_bayes_1 <- ae_model %>% 
-  marginaleffects::slopes(variables = "occupied_ratio",
-         newdata = marginaleffects::datagrid(occupied_ratio = c(100,83,75))) %>% 
-  marginaleffects::posterior_draws()
-
-#comparisons - what are the slopes??
-ame_beta_avg_slopes <- ae_model %>% 
-  marginaleffects::avg_slopes(variables = "occupied_ratio",
-                              by = 'covid_flag')
-
-ame_beta_bayes_slopes <- ae_model %>% 
-  marginaleffects::slopes(variables = "occupied_ratio",
-                          newdata = marginaleffects::datagrid(
-                            occupied_ratio = c(100,83,75),
-                            covid_flag = unique))
-
-# Testing with effects:: package. I hate this.
-comparative_model <- marginaleffects::comparisons(model = ae_model,
-                             newdata = marginaleffects::datagrid(
-                               #org_code = unique,
-                               covid_flag = 'pre_covid', 
-                               occupied_ratio = c(70:100)),
-                             comparison = 'difference')
-
-# Model outputs: fraclogit -----
-
-ae_model_frac <- glm(all_breaches_ratio ~ 
-                       occupied_ratio + 
-                       covid_flag + 
-                       (1|org_code), 
-                     data = FINAL_regression_data, 
-                     family = quasibinomial())
-
-ae_model_frac_1 <-marginaleffects::predictions(ae_model_frac, 
-                               newdata = marginaleffects::datagrid(
-                                 occupied_ratio = seq(0, 100, by = 1),
-                                 covid_flag = unique))
-
-ame_fraclogit_slopes <- ae_model_frac %>% 
-  marginaleffects::slopes(variables = "occupied_ratio",
-                          newdata = marginaleffects::datagrid(
-                            occupied_ratio = c(50:100)))

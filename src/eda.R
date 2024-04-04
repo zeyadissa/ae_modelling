@@ -47,14 +47,3 @@ ggplot2::ggplot(EDA_2) +
   geom_hline(yintercept=95)+
   theme_bw() +
   ylim(50,100)
-
-#plot of different tests
-ggplot(ame_beta_bayes_1, aes(x = draw * 100, fill = factor(occupied_ratio))) +
-  geom_vline(xintercept = 0) +
-  ggdist::stat_halfeye(.width = c(0.8, 0.95), point_interval = "median_hdi",
-               slab_alpha = 0.75) +
-  scale_fill_viridis_d(option = "viridis", end = 0.6) +
-  labs(x = "Average marginal effect of occupied beds", 
-       y = "Density", fill = "Occupied bed rates",
-       caption = "80% and 95% credible intervals shown in black") +
-  theme(legend.position = "bottom")
